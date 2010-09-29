@@ -8,7 +8,6 @@ class ScriptProcessor extends Processor {
   val globalScripts = Path.userHome / ".sbt" / "scripts"
 
   val Execute = """--exec\s+(.*)""".r
-  val ScalaScript = """--scala\s+(\S+)""".r
   val Script = """(\S+)""".r
 
   val Property = """(.*)#\{(.+)\}(.*)""".r
@@ -40,10 +39,10 @@ class ScriptProcessor extends Processor {
     }
 
     args match {
-      case Execute(command)  => execute(command)
-      case ScalaScript(name) => scalaScript(name)
-      case Script(name)      => script(name)
-      case _                 => fail("Usage: " + label + " <scriptname>")
+      case Execute(command) => execute(command)
+      case Script(name) if name.endsWith(".scala") => scalaScript(name)
+      case Script(name) => script(name)
+      case _ => fail("Usage: " + label + " <scriptname>")
     }
   }
 
