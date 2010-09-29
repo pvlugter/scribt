@@ -52,10 +52,11 @@ Scala snippets
 
 Scribt can also run Scala scripts, which run as if entered into the
 `console-project` interpreter, including having the current project
-bound to `current` and importing `sbt._` and `current._`.
+bound to `current` and importing `sbt._` and `current._`. Scala
+scripts are detected by `.scala` extension.
 
 For example, the following Scala snippet can be put in a file called
-`version-sans`. It removes the extra part of the project version.
+`version-sans.scala`. It removes the extra part of the project version.
 
     projectVersion.get match {
       case Some(v: BasicVersion) => {
@@ -69,7 +70,7 @@ For example, the following Scala snippet can be put in a file called
 
 It can then be run with:
 
-    script --scala version-sans
+    script version-sans.scala
 
 
 Example
