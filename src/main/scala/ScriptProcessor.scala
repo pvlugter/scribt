@@ -8,9 +8,9 @@ class ScriptProcessor extends Processor {
   val globalScripts = Path.userHome / ".sbt" / "scripts"
 
   val Execute = """--exec\s+(.*)""".r
-  val Script = """(\S+)""".r
+  val Script = """(\S+)\s*(.*)""".r
 
-  val Property = """(.*)#\{(.+)\}(.*)""".r
+  val Property = """(.*)\{\{(.+)\}\}(.*)""".r
 
   def apply(label: String, project: Project, onFailure: Option[String], args: String): ProcessorResult = {
     def succeed() = new processor.Success(project, onFailure)
@@ -30,18 +30,32 @@ class ScriptProcessor extends Processor {
       succeed
     }
 
-    def script(name: String) = {
+    def shellScript(name: String, scriptArgs: String) = {
+      val path = locateScript(name)
+      project.log.info("Running shell script from: " + path)
+      project.log.info("%% %s %s".format(name, scriptArgs))
+      insert("sh sh %s %s".format(path, scriptArgs))
+    }
+
+    def script(name: String, scriptArgs: String) = {
       val path = locateScript(name)
       project.log.info("Loading script from: " + path)
-      val cmds = readLines(path, project.log)
+      scriptArgs.split("\\s+").zipWithIndex.foreach {
+        case (arg, index) =>
+          val argName = "%s.arg%s".format(name, (index + 1))
+          project.log.info("Setting property %s = %s".format(argName, arg))
+          System.setProperty(argName, arg)
+      }
+      val cmds = readLines(path, project.log) filter (!_.trim.startsWith("#"))
       val execs = cmds map (label + " --exec " + _)
       insert(execs: _*)
     }
 
     args match {
       case Execute(command) => execute(command)
-      case Script(name) if name.endsWith(".scala") => scalaScript(name)
-      case Script(name) => script(name)
+      case Script(name, scriptArgs) if name.endsWith(".scala") => scalaScript(name)
+      case Script(name, scriptArgs) if name.endsWith(".sh") => shellScript(name, scriptArgs)
+      case Script(name, scriptArgs) => script(name, scriptArgs)
       case _ => fail("Usage: " + label + " <scriptname>")
     }
   }

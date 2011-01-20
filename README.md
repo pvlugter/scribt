@@ -37,12 +37,12 @@ Properties
 ----------
 
 Scribt allows property replacement in commands with
-`#{property.name}`. Properties are looked up in a similar way to the
+`{{property.name}}`. Properties are looked up in a similar way to the
 sbt `get` action.
 
 For example, the following can be included in a script:
 
-    sh git commit -am "release version #{project.version}"
+    sh git commit -am "release version {{project.version}}"
 
 To do a git commit where the message includes the project version.
 
